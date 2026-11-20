@@ -22,6 +22,8 @@ node serve.ts
 
 Then open http://localhost:8080 in desktop Chrome. The app is plain static files under `app/` — no build step, no network request, and photos never leave your machine.
 
+Or skip the install and try it live: https://hibikazen.github.io/makefun-gta6-cover-art-01/app/
+
 ## Originality
 
 Everything here is original: no Rockstar Games logo, wordmark, official artwork or font. The lettering uses Anton and Oswald, both licensed under the SIL Open Font License and vendored under `app/fonts/` (see `app/fonts/OFL-NOTICE.txt`). The two sample photos under `app/samples/` were made with an image model for make.fun and are free to use.
