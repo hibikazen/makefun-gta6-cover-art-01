@@ -5,54 +5,48 @@
 [![reward](https://make.fun/badge/gta6-cover-art-01/hibikazen/makefun-gta6-cover-art-01/reward.svg)](https://make.fun/c/gta6-cover-art-01)
 
 An offline web app that turns your photos and a caption into GTA 6-style
-multi-panel cover art, exported as a PNG to share. Built for the
-[Make GTA 6 Cover Art](https://make.fun/c/gta6-cover-art-01) competition on
-make.fun.
+multi-panel cover art — the poster look with bold lettering and a Vice City
+sunset or neon grade — exported as a PNG to share.
 
 **Live demo:** https://hibikazen.github.io/makefun-gta6-cover-art-01/app/
+**Competition:** https://make.fun/c/gta6-cover-art-01
 
 ## What it does
 
-- **Any photo:** drop in your own photos (or use the two built-in samples),
-  fill several panels with one photo or several, and crop, pan and zoom each
-  panel — drag on the canvas, scroll to zoom, or use the sliders.
-- **8 multi-panel layouts:** Classic Grid, Hero Left, Hero Right, Triptych,
-  Comic Strip, Center Stage, Editorial and Split Duo.
-- **7 colour grades:** Vice Sunset, Neon Vice, Retro Print, Halftone Pop,
-  Teal Noir, Golden Hour and Mono Pop — each with its own tint wash, grain
-  and vignette.
-- **Bold caption lettering:** a big Anton display title plus an Oswald
-  subtitle, with three fill styles (Solid, Sunset Fade, Neon Glow) and a
-  poster tilt control.
-- **One-click export:** PNG in the common post sizes — 1080 × 1080 (square),
-  1080 × 1350 (portrait) and 1920 × 1080 (landscape).
-- **Fully offline:** static files only, no build step, no network requests.
-  Your photos never leave your machine.
+- **Any photo:** upload your own photos or use the built-in samples; every
+  panel gets its own photo, crop, zoom and pan.
+- **8 layouts:** Classic Grid, Hero Left, Hero Right, Triptych, Comic Strip,
+  Center Stage, Editorial and Split Duo.
+- **7 grades:** Vice Sunset, Neon Vice, Retro Print, Halftone Dot, Teal Noir,
+  Golden Hour and Mono Pop.
+- **Caption:** big Anton title plus an Oswald subtitle, in three fill styles
+  — Solid, Sunset Fade and Neon Glow — with poster tilt and size controls.
+- **One-click export:** PNG at 1080 × 1080, 1080 × 1350 or 1920 × 1080.
+- **Fully offline:** plain static files under `app/`, no build step, no
+  network request; your photos never leave your machine.
 
-## Try it
+## Run it locally
 
 ```sh
 node serve.ts
+# open http://localhost:8080
 ```
-
-Then open http://localhost:8080 — or serve `app/` with any static file
-server and open `app/index.html`.
 
 ## Layout
 
-- `app/` — the web app (index.html, style.css, src/*.js, fonts, samples)
+- `app/` — the web app (index.html, style.css, src/, fonts/, samples/)
 - `screenshots/` — screenshots of the app and covers it exported
-- `shots.json` — the four screenshot scenes (`?shot=` URLs)
-- `main.ts` — the entry program: copies `app/` + `screenshots/` to the
-  output directory and writes `dossier.json`
-- `serve.ts` — a tiny static server for local previews
+- `shots.json` — the four screenshot scenes (`?shot=` presets)
+- `main.ts` — the entry program: copies `app/` + `screenshots/` and writes
+  the dossier with the vendored make.fun library
+- `vendor/makefun-app.ts` — the kit's dossier library, unchanged
 
-## Fonts and photos
+## Fonts and originality
 
-The display fonts (Anton and Oswald) are licensed under the SIL Open Font
-License 1.1 — see `app/fonts/OFL-NOTICE.txt`. The two sample photos were
-made with an image model for make.fun and are free to use. No Rockstar Games
-logo, artwork or font is used anywhere.
+Lettering uses Anton and Oswald, both under the SIL Open Font License and
+vendored in `app/fonts/` (see `app/fonts/OFL-NOTICE.txt`). No Rockstar
+Games logo, wordmark, official artwork or font is used anywhere. The sample
+photos were made with an image model for make.fun and are free to use.
 
 ## License
 

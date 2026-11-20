@@ -1,11 +1,12 @@
-// Sunset Cover Studio — entry program for gta6-cover-art-01.
+// Sunset Cover Studio — the entry program (Node 22, standard library only).
 //
-// Runs on Node 22 with only the standard library, in a container with no
-// network: it copies this repository's app/ and screenshots/ into the output
-// directory and writes dossier.json there with the vendored make.fun dossier
-// library. The grader runs it twice and both runs must write the same bytes.
+// It hands the app in: copies this repository's app/ and screenshots/ into
+// the output directory and writes dossier.json there with the vendored
+// make.fun library, which is also the scorer's own copy — so the dossier
+// the judge reads is byte for byte the one the gate rebuilds.
 //
-// Locally, MAKEFUN_OUTPUT_DIR stands in for /output:
+// In the grader the output directory is /output; anywhere else, set
+// MAKEFUN_OUTPUT_DIR first:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -16,24 +17,25 @@ import { buildDossier } from './vendor/makefun-app.ts';
 const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-mkdirSync(outDir, { recursive: true });
-cpSync(join(repoRoot, 'app'), join(outDir, 'app'), { recursive: true });
-
-const shotsDir = join(repoRoot, 'screenshots');
-if (existsSync(shotsDir)) {
-  cpSync(shotsDir, join(outDir, 'screenshots'), { recursive: true });
+function copyIfPresent(name) {
+  const from = join(repoRoot, name);
+  if (!existsSync(from)) return;
+  cpSync(from, join(outDir, name), { recursive: true });
 }
 
-// The gate's caps, as the kit's reference data states them: the dossier text
-// is capped at 160 KiB, at most 4 screenshots of 256 KiB each, app/ at most
-// 993 entries and 48 MiB with no path over 1000 bytes.
-writeFileSync(
-  join(outDir, 'dossier.json'),
-  buildDossier(outDir, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    app_max_files: 993,
-    app_max_bytes: 50331648,
-    app_path_max_bytes: 1000,
-  }),
-);
+mkdirSync(outDir, { recursive: true });
+copyIfPresent('app');
+mkdirSync(join(outDir, 'screenshots'), { recursive: true });
+copyIfPresent('screenshots');
+
+// The scorer's caps, from the competition's reference data: the dossier
+// text is capped at 160 KiB, screenshots at 4 files of 256 KiB, app/ at
+// 993 files and 48 MiB with no path over 1000 bytes.
+const dossier = buildDossier(outDir, {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  app_max_files: 993,
+  app_max_bytes: 50331648,
+  app_path_max_bytes: 1000,
+});
+writeFileSync(join(outDir, 'dossier.json'), dossier);

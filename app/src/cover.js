@@ -1,274 +1,234 @@
-// The cover renderer: draws the multi-panel cover onto any canvas.
-//
-// State it reads:
-//   photos   loaded images, in the order the editor holds them
-//   panels   one entry per layout panel: { photo, zoom, dx, dy }
-//            photo is an index into photos; zoom 1..3; dx/dy pan in [-1, 1]
-//   layout   layout id from layouts.js
-//   grade    grade id from grades.js
-//   title, subtitle, fill ('solid' | 'sunset' | 'neon'), tilt (degrees)
-//
-// drawCover paints at the canvas's own size, so the live preview and the
-// full-size export share one code path; exportCoverPng renders offscreen
-// and hands back a PNG blob.
+// Cover renderer for Sunset Cover Studio: draws panels, grades and the
+// caption onto any canvas. The editor preview and the PNG export run the
+// same code, so what you see is exactly what you share.
 
-import { panelRects } from './layouts.js';
-import { gradeById } from './grades.js';
+import { LAYOUTS, panelRect } from './layouts.js';
+import { GRADES } from './grades.js';
 
-export const EXPORT_SIZES = {
-  square: { w: 1080, h: 1080, label: 'Square 1080 × 1080' },
-  portrait: { w: 1080, h: 1350, label: 'Portrait 1080 × 1350' },
-  landscape: { w: 1920, h: 1080, label: 'Landscape 1920 × 1080' },
+export const SIZES = {
+  square: { label: 'Square 1080 × 1080', width: 1080, height: 1080 },
+  portrait: { label: 'Portrait 1080 × 1350', width: 1080, height: 1350 },
+  landscape: { label: 'Landscape 1920 × 1080', width: 1920, height: 1080 },
 };
 
-export const PREVIEW_SIZES = {
-  square: { w: 900, h: 900 },
-  portrait: { w: 864, h: 1080 },
-  landscape: { w: 1280, h: 720 },
-};
+// Draw one photo into a panel rect, cover-fit, with the panel's zoom and
+// pan. Offsets run -0.5..0.5 and never uncover the panel's edges.
+function drawPhotoCover(ctx, img, rect, panel) {
+  const zoom = panel?.zoom ?? 1;
+  const ox = panel?.ox ?? 0;
+  const oy = panel?.oy ?? 0;
+  const scale = Math.max(rect.w / img.naturalWidth, rect.h / img.naturalHeight) * zoom;
+  const dw = img.naturalWidth * scale;
+  const dh = img.naturalHeight * scale;
+  const dx = rect.x + (rect.w - dw) / 2 + ox * Math.max(0, dw - rect.w);
+  const dy = rect.y + (rect.h - dh) / 2 + oy * Math.max(0, dh - rect.h);
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
 
-const GUTTER_FILL = '#f5efe4';
-const SCRIM_TOP = 'rgba(8, 4, 16, 0)';
-const SCRIM_BOTTOM = 'rgba(8, 4, 16, 0.8)';
+function drawTintWash(ctx, width, height, grade) {
+  if (!grade.tint) return;
+  const wash = ctx.createLinearGradient(0, 0, width, height);
+  wash.addColorStop(0, grade.tint.from);
+  wash.addColorStop(1, grade.tint.to);
+  ctx.save();
+  ctx.globalCompositeOperation = grade.tint.composite;
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
 
-let grainTile = null;
+function drawHalftoneDots(ctx, width, height) {
+  const spacing = Math.max(7, Math.round(width / 170));
+  const radius = spacing * 0.3;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+  for (let row = 0, y = spacing / 2; y < height; y += spacing, row += 1) {
+    const offset = row % 2 === 0 ? 0 : spacing / 2;
+    for (let x = spacing / 2 + offset; x < width; x += spacing) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 
-export function drawCover(canvas, state) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-  const grade = gradeById(state.grade);
+function drawVignette(ctx, width, height, strength) {
+  if (!strength) return;
+  const cx = width / 2;
+  const cy = height / 2;
+  const inner = Math.min(width, height) * 0.42;
+  const outer = Math.max(width, height) * 0.75;
+  const shade = ctx.createRadialGradient(cx, cy, inner, cx, cy, outer);
+  shade.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  shade.addColorStop(1, `rgba(0, 0, 0, ${(0.4 * strength).toFixed(3)})`);
+  ctx.save();
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
+function drawCaptionScrim(ctx, width, cy, titlePx) {
+  const bandH = titlePx * 2.4;
+  const top = cy - bandH * 0.62;
+  const scrim = ctx.createLinearGradient(0, top, 0, top + bandH);
+  scrim.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  scrim.addColorStop(0.5, 'rgba(0, 0, 0, 0.42)');
+  scrim.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.save();
+  ctx.fillStyle = scrim;
+  ctx.fillRect(0, Math.max(0, top), width, bandH);
+  ctx.restore();
+}
+
+function titleFill(ctx, title, cx, cy, titlePx, fill) {
+  ctx.save();
+  ctx.font = `${titlePx}px Anton, 'Arial Black', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (fill === 'neon') {
+    ctx.lineWidth = Math.max(2, titlePx * 0.02);
+    ctx.strokeStyle = 'rgba(8, 18, 38, 0.9)';
+    ctx.strokeText(title, cx, cy);
+    ctx.shadowColor = '#00d5ff';
+    ctx.shadowBlur = titlePx * 0.38;
+    ctx.fillStyle = '#f2fbff';
+    ctx.fillText(title, cx, cy);
+    ctx.fillText(title, cx, cy);
+    ctx.shadowColor = '#ff2e88';
+    ctx.shadowBlur = titlePx * 0.2;
+    ctx.fillText(title, cx, cy);
+  } else if (fill === 'sunset') {
+    const fade = ctx.createLinearGradient(0, cy - titlePx * 0.55, 0, cy + titlePx * 0.55);
+    fade.addColorStop(0, '#ffe259');
+    fade.addColorStop(0.5, '#ff7e5f');
+    fade.addColorStop(1, '#ff2975');
+    ctx.lineWidth = Math.max(2, titlePx * 0.07);
+    ctx.strokeStyle = '#1a0b2e';
+    ctx.lineJoin = 'round';
+    ctx.strokeText(title, cx, cy);
+    ctx.fillStyle = fade;
+    ctx.fillText(title, cx, cy);
+  } else {
+    ctx.lineWidth = Math.max(2, titlePx * 0.09);
+    ctx.strokeStyle = '#0a0a0a';
+    ctx.lineJoin = 'round';
+    ctx.strokeText(title, cx, cy);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+    ctx.shadowBlur = titlePx * 0.12;
+    ctx.shadowOffsetY = titlePx * 0.03;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(title, cx, cy);
+  }
+  ctx.restore();
+}
+
+function drawCaption(ctx, width, height, layoutId, state) {
+  const layout = LAYOUTS[layoutId];
+  const zone = layout.caption;
+  const maxWidth = zone.width * width;
+  let titlePx = width * 0.115 * (state.captionSize ?? 1);
+  ctx.save();
+  ctx.font = `${titlePx}px Anton, 'Arial Black', sans-serif`;
+  const measured = ctx.measureText(state.title || ' ').width;
+  if (measured > maxWidth && measured > 0) titlePx *= maxWidth / measured;
+  ctx.restore();
+
+  // Keep the whole caption block — title plus subtitle — inside the frame,
+  // whatever the layout's zone and the title size say.
+  const subPx = Math.max(10, titlePx * 0.3);
+  const cx = zone.x * width;
+  let cy = zone.y * height;
+  if (state.subtitle) {
+    const blockBottom = cy + titlePx * 0.72 + subPx;
+    const limit = height * 0.975;
+    if (blockBottom > limit) cy -= blockBottom - limit;
+  }
+
+  drawCaptionScrim(ctx, width, cy, titlePx);
 
   ctx.save();
-  ctx.filter = 'none';
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = GUTTER_FILL;
-  ctx.fillRect(0, 0, w, h);
-
-  const rects = panelRects(state.layout);
-  rects.forEach((rect, index) => {
-    const panel = state.panels[index] ?? { photo: 0, zoom: 1, dx: 0, dy: 0 };
-    const img = state.photos[panel.photo] ?? state.photos[0];
-    const px = rect.x * w;
-    const py = rect.y * h;
-    const pw = rect.w * w;
-    const ph = rect.h * h;
-    if (img && img.naturalWidth > 0) {
-      drawPhotoPanel(ctx, img, px, py, pw, ph, panel, grade.filter);
-    } else {
-      drawPlaceholderPanel(ctx, px, py, pw, ph, index);
+  ctx.translate(cx, cy);
+  ctx.rotate(((state.tilt ?? 0) * Math.PI) / 180);
+  ctx.translate(-cx, -cy);
+  titleFill(ctx, state.title || '', cx, cy, titlePx, state.fill || 'sunset');
+  if (state.subtitle) {
+    ctx.save();
+    ctx.font = `500 ${subPx}px Oswald, 'Arial Narrow', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    try {
+      ctx.letterSpacing = `${Math.max(2, subPx * 0.22)}px`;
+    } catch {
+      // letterSpacing is Chrome-only; the subtitle still draws without it.
     }
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.fillText(state.subtitle.toUpperCase(), cx, cy + titlePx * 0.72);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// Render the whole cover onto a canvas that is already sized.
+export function renderCover(canvas, state, photos) {
+  const width = canvas.width;
+  const height = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const layout = LAYOUTS[state.layout] ?? LAYOUTS.grid;
+  const grade = GRADES[state.grade] ?? GRADES.sunset;
+  const gutter = Math.max(2, Math.round(width * 0.008));
+
+  ctx.save();
+  ctx.fillStyle = '#0d0d12';
+  ctx.fillRect(0, 0, width, height);
+
+  layout.panels.forEach((panel, i) => {
+    const rect = panelRect(state.layout, i, width, height, gutter);
+    const slot = state.panels?.[i] ?? { photo: 0, zoom: 1, ox: 0, oy: 0 };
+    const photo = photos[slot.photo % Math.max(1, photos.length)];
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+    ctx.clip();
+    if (photo?.img) {
+      ctx.filter = grade.filter;
+      drawPhotoCover(ctx, photo.img, rect, slot);
+      ctx.filter = 'none';
+    } else {
+      const fallback = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
+      fallback.addColorStop(0, '#2b1055');
+      fallback.addColorStop(0.55, '#7597de');
+      fallback.addColorStop(1, '#ff7e5f');
+      ctx.fillStyle = fallback;
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    }
+    ctx.restore();
   });
 
-  drawGradeWash(ctx, w, h, grade);
-  if (grade.halftone) drawHalftoneDots(ctx, w, h);
-  if (grade.grain > 0) drawFilmGrain(ctx, w, h, grade.grain);
-  if (grade.vignette > 0) drawVignette(ctx, w, h, grade.vignette);
-  drawCaptionBlock(ctx, w, h, state);
-  ctx.restore();
-}
+  drawTintWash(ctx, width, height, grade);
+  if (grade.dots) drawHalftoneDots(ctx, width, height);
+  drawVignette(ctx, width, height, grade.vignette);
+  drawCaption(ctx, width, height, state.layout, state);
 
-export function exportCoverPng(state, sizeId) {
-  const size = EXPORT_SIZES[sizeId] ?? EXPORT_SIZES.square;
-  const canvas = document.createElement('canvas');
-  canvas.width = size.w;
-  canvas.height = size.h;
-  drawCover(canvas, state);
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-}
-
-export function panelIndexAt(layoutId, w, h, px, py) {
-  const rects = panelRects(layoutId);
-  for (let i = 0; i < rects.length; i += 1) {
-    const r = rects[i];
-    if (px >= r.x * w && px < (r.x + r.w) * w && py >= r.y * h && py < (r.y + r.h) * h) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-function drawPhotoPanel(ctx, img, x, y, w, h, panel, filter) {
-  const iw = img.naturalWidth;
-  const ih = img.naturalHeight;
-  const scale = Math.max(w / iw, h / ih) * panel.zoom;
-  const dw = iw * scale;
-  const dh = ih * scale;
-  const ox = x - (dw - w) * (0.5 + panel.dx * 0.5);
-  const oy = y - (dh - h) * (0.5 + panel.dy * 0.5);
+  // Thin white poster frame.
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, w, h);
-  ctx.clip();
-  ctx.filter = filter;
-  ctx.drawImage(img, ox, oy, dw, dh);
-  ctx.filter = 'none';
-  ctx.restore();
-}
-
-function drawPlaceholderPanel(ctx, x, y, w, h, index) {
-  const sky = ctx.createLinearGradient(x, y, x, y + h);
-  sky.addColorStop(0, index % 2 === 0 ? '#2b1055' : '#0b1e3a');
-  sky.addColorStop(0.55, '#c86dd7');
-  sky.addColorStop(1, '#ff7a18');
-  ctx.fillStyle = sky;
-  ctx.fillRect(x, y, w, h);
-  const sunR = Math.min(w, h) * 0.16;
-  ctx.fillStyle = '#ffd166';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.42, sunR, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(20, 8, 32, 0.55)';
-  ctx.fillRect(x, y + h * 0.68, w, h * 0.32);
-}
-
-function drawGradeWash(ctx, w, h, grade) {
-  if (!grade.tint || grade.tint.length === 0) return;
-  const wash = ctx.createLinearGradient(0, 0, 0, h);
-  wash.addColorStop(0, grade.tint[0]);
-  wash.addColorStop(1, grade.tint[grade.tint.length - 1]);
-  ctx.save();
-  ctx.globalCompositeOperation = grade.blend;
-  ctx.globalAlpha = grade.tintAlpha;
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 0, w, h);
-  ctx.restore();
-}
-
-function drawHalftoneDots(ctx, w, h) {
-  const gap = Math.max(6, Math.round(w / 200));
-  const radius = gap * 0.3;
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = 'rgba(20, 10, 30, 0.22)';
-  ctx.beginPath();
-  for (let yy = gap / 2; yy < h; yy += gap) {
-    for (let xx = gap / 2; xx < w; xx += gap) {
-      ctx.moveTo(xx + radius, yy);
-      ctx.arc(xx, yy, radius, 0, Math.PI * 2);
-    }
-  }
-  ctx.fill();
-  ctx.restore();
-}
-
-function drawFilmGrain(ctx, w, h, amount) {
-  if (!grainTile) {
-    grainTile = document.createElement('canvas');
-    grainTile.width = 160;
-    grainTile.height = 160;
-    const tileCtx = grainTile.getContext('2d');
-    const data = tileCtx.createImageData(160, 160);
-    for (let i = 0; i < data.data.length; i += 4) {
-      const shade = 110 + Math.floor(Math.random() * 90);
-      data.data[i] = shade;
-      data.data[i + 1] = shade;
-      data.data[i + 2] = shade;
-      data.data[i + 3] = 255;
-    }
-    tileCtx.putImageData(data, 0, 0);
-  }
-  ctx.save();
-  ctx.globalCompositeOperation = 'overlay';
-  ctx.globalAlpha = amount;
-  ctx.fillStyle = ctx.createPattern(grainTile, 'repeat');
-  ctx.fillRect(0, 0, w, h);
-  ctx.restore();
-}
-
-function drawVignette(ctx, w, h, amount) {
-  const edge = ctx.createRadialGradient(
-    w / 2, h / 2, Math.min(w, h) * 0.42,
-    w / 2, h / 2, Math.max(w, h) * 0.72,
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = Math.max(2, width * 0.005);
+  ctx.strokeRect(
+    width * 0.012,
+    height * 0.012,
+    width * 0.976,
+    height * 0.976,
   );
-  edge.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  edge.addColorStop(1, `rgba(5, 2, 12, ${amount})`);
-  ctx.save();
-  ctx.fillStyle = edge;
-  ctx.fillRect(0, 0, w, h);
   ctx.restore();
 }
 
-function fitTitleSize(ctx, title, maxWidth, startSize) {
-  let size = startSize;
-  ctx.font = `${size}px Anton, sans-serif`;
-  while (size > startSize * 0.4 && ctx.measureText(title).width > maxWidth) {
-    size = Math.floor(size * 0.94);
-    ctx.font = `${size}px Anton, sans-serif`;
-  }
-  return size;
-}
-
-function drawCaptionBlock(ctx, w, h, state) {
-  const title = (state.title ?? '').trim();
-  const subtitle = (state.subtitle ?? '').trim();
-  if (!title && !subtitle) return;
-
-  const scrim = ctx.createLinearGradient(0, h * 0.55, 0, h);
-  scrim.addColorStop(0, SCRIM_TOP);
-  scrim.addColorStop(1, SCRIM_BOTTOM);
-  ctx.fillStyle = scrim;
-  ctx.fillRect(0, h * 0.55, w, h * 0.45);
-
-  ctx.save();
-  ctx.translate(w / 2, h * 0.9);
-  ctx.rotate((state.tilt ?? 0) * (Math.PI / 180));
-  ctx.translate(-w / 2, -h * 0.9);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-
-  const subSize = Math.max(18, Math.round(w * 0.03));
-  const titleBaseline = h * 0.915;
-  const subBaseline = h * 0.962;
-
-  if (title) {
-    const size = fitTitleSize(ctx, title, w * 0.9, Math.round(w * 0.115));
-    ctx.font = `${size}px Anton, sans-serif`;
-    if (state.fill === 'sunset') {
-      const textW = ctx.measureText(title).width;
-      const fade = ctx.createLinearGradient(w / 2 - textW / 2, 0, w / 2 + textW / 2, 0);
-      fade.addColorStop(0, '#ffd166');
-      fade.addColorStop(0.5, '#ff5e62');
-      fade.addColorStop(1, '#c86dd7');
-      ctx.lineWidth = Math.max(2, size * 0.03);
-      ctx.strokeStyle = 'rgba(10, 5, 18, 0.9)';
-      ctx.strokeText(title, w / 2, titleBaseline);
-      ctx.fillStyle = fade;
-      ctx.fillText(title, w / 2, titleBaseline);
-    } else if (state.fill === 'neon') {
-      ctx.lineWidth = Math.max(2, size * 0.025);
-      ctx.strokeStyle = 'rgba(10, 5, 18, 0.85)';
-      ctx.strokeText(title, w / 2, titleBaseline);
-      ctx.shadowColor = '#ff2ea6';
-      ctx.shadowBlur = size * 0.22;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(title, w / 2, titleBaseline);
-      ctx.fillText(title, w / 2, titleBaseline);
-      ctx.shadowColor = '#22d3ee';
-      ctx.shadowBlur = size * 0.08;
-      ctx.fillText(title, w / 2, titleBaseline);
-      ctx.shadowBlur = 0;
-    } else {
-      ctx.lineWidth = Math.max(2, size * 0.055);
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = 'rgba(10, 5, 18, 0.88)';
-      ctx.strokeText(title, w / 2, titleBaseline);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(title, w / 2, titleBaseline);
-    }
-  }
-
-  if (subtitle) {
-    ctx.font = `600 ${subSize}px Oswald, sans-serif`;
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '0.34em';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-    ctx.shadowBlur = Math.max(4, subSize * 0.3);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.fillText(subtitle.toUpperCase(), w / 2, subBaseline);
-    ctx.shadowBlur = 0;
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-  }
-
-  ctx.restore();
+// Build an export canvas at the exact post size and draw the cover on it.
+export function renderExport(state, photos, sizeId) {
+  const size = SIZES[sizeId] ?? SIZES.square;
+  const canvas = document.createElement('canvas');
+  canvas.width = size.width;
+  canvas.height = size.height;
+  renderCover(canvas, state, photos);
+  return canvas;
 }

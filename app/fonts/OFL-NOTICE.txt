@@ -1,20 +1,18 @@
-Fonts shipped with Sunset Cover Studio
-====================================
+Fonts in this folder — SIL Open Font License, version 1.1
 
-Anton-Regular.ttf — "Anton", Copyright 2020 The Anton Project Authors.
-Oswald.ttf — "Oswald" (variable weight), Copyright 2016 The Oswald Project Authors.
+Anton-Regular.ttf
+  Anton, Copyright 2020 The Anton Project Authors
+  (https://github.com/googlefonts/AntonFont).
+  Designed by Vernon Adams. Licensed under the SIL Open Font License, 1.1.
 
-Both typefaces are licensed under the SIL Open Font License, Version 1.1,
-which allows them to be used, studied, modified and redistributed freely,
-including in this application. Both files were downloaded from the
-google/fonts repository on GitHub (github.com/google/fonts), which
-distributes them under that license.
+Oswald.ttf
+  Oswald (variable weight), Copyright 2016 The Oswald Project Authors
+  (https://github.com/googlefonts/OswaldFont).
+  Designed by Vernon Adams. Licensed under the SIL Open Font License, 1.1.
 
-The full text of the SIL Open Font License 1.1 is available at
-https://openfontlicense.org/ — summarized: the fonts may be used freely,
-including for commercial purposes, provided they are not sold on their own
-and any modified version keeps the same license and a different name.
-Reserved Font Names: "Anton" and "Oswald" respectively.
-
-No Rockstar Games artwork, logo, wordmark or font is used anywhere in this
-application. All lettering uses these two OFL fonts only.
+Source: the google/fonts repository (https://github.com/google/fonts),
+ofl/anton/Anton-Regular.ttf and ofl/oswald/Oswald[wght].ttf, downloaded
+unmodified. Both faces are free to use, study, copy, merge, embed,
+modify, redistribute and sell, under the terms of the SIL Open Font
+License 1.1 (https://openfontlicense.org). No Rockstar Games font is
+used anywhere in this app.

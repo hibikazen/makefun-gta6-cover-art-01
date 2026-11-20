@@ -4,102 +4,97 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sunset Cover Studio — GTA-style cover art maker</title>
-<link rel="icon" href="data:,">
+<meta name="description" content="Turn your photos and a caption into GTA 6-style multi-panel cover art, offline in your browser. Export a PNG in one click.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ff7e5f'/%3E%3Cstop%20offset='1'%20stop-color='%23ff2975'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='url(%23g)'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Arial%20Black'%20font-size='34'%20fill='white'%20text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark">SCS</span>
-    <div>
-      <h1>Sunset Cover Studio</h1>
-      <p>Turn any photo into GTA-style multi-panel cover art — offline, in your browser.</p>
-    </div>
+    <h1>Sunset Cover Studio</h1>
+    <p>Multi-panel cover art, Vice City style — made offline, on your machine.</p>
   </div>
-  <div class="size-picker" id="sizePicker" role="group" aria-label="Cover size">
-    <button type="button" data-size="square" class="size-btn is-active">Square<br><small>1080 × 1080</small></button>
-    <button type="button" data-size="portrait" class="size-btn">Portrait<br><small>1080 × 1350</small></button>
-    <button type="button" data-size="landscape" class="size-btn">Landscape<br><small>1920 × 1080</small></button>
-  </div>
+  <p class="badge">No upload · No watermark · Your photos stay yours</p>
 </header>
 
-<main class="studio">
-  <section class="preview-pane" aria-label="Cover preview">
+<main class="workspace">
+  <section class="stage" id="stage">
     <div class="canvas-frame">
-      <canvas id="coverCanvas" width="900" height="900"></canvas>
-      <p class="canvas-hint">Click a panel to select it · drag to reposition its photo · scroll to zoom</p>
+      <canvas id="preview" width="960" height="540"></canvas>
     </div>
-    <div class="export-bar" id="exportBar">
-      <span class="export-label">Export PNG:</span>
-      <button type="button" data-export="square">Square 1080 × 1080</button>
-      <button type="button" data-export="portrait">Portrait 1080 × 1350</button>
-      <button type="button" data-export="landscape">Landscape 1920 × 1080</button>
-    </div>
-    <p class="status-line" id="statusLine" role="status"></p>
+    <p class="hint">Click a panel in the preview to select it, then crop and position it below.</p>
+    <div class="size-row" id="size-picker"></div>
   </section>
 
   <aside class="controls">
-    <section class="panel" aria-label="Photos">
+    <section class="card">
       <h2>1 · Photos</h2>
-      <label class="file-drop" for="photoInput">Add your photos
-        <input id="photoInput" type="file" accept="image/*" multiple>
+      <label class="upload-btn">
+        Add your photos
+        <input id="upload" type="file" accept="image/*" multiple hidden>
       </label>
       <div class="sample-row">
-        <span>Or try a sample:</span>
-        <button type="button" data-sample="boulevard">Boulevard</button>
-        <button type="button" data-sample="pier">Pier</button>
+        <button type="button" id="sample-boulevard" class="mini">Sample: Boulevard</button>
+        <button type="button" id="sample-pier" class="mini">Sample: Pier</button>
       </div>
-      <div class="photo-strip" id="photoStrip"></div>
-      <p class="note">Click a photo to put it in the selected panel. Photos stay on your machine.</p>
+      <div class="photo-tray" id="photo-tray"></div>
     </section>
 
-    <section class="panel" aria-label="Layout">
+    <section class="card">
       <h2>2 · Layout</h2>
-      <div class="layout-picker" id="layoutPicker"></div>
+      <div class="picker" id="layout-picker"></div>
     </section>
 
-    <section class="panel" aria-label="Colour grade">
+    <section class="card">
       <h2>3 · Grade</h2>
-      <div class="grade-picker" id="gradePicker"></div>
+      <div class="picker" id="grade-picker"></div>
     </section>
 
-    <section class="panel" aria-label="Caption">
+    <section class="card">
       <h2>4 · Caption</h2>
-      <label>Title
-        <input id="titleInput" type="text" value="Sunset Heist" maxlength="40" autocomplete="off">
+      <label class="field">Title
+        <input id="caption-title" type="text" maxlength="28" autocomplete="off">
       </label>
-      <label>Subtitle
-        <input id="subtitleInput" type="text" value="Leonida Nights" maxlength="60" autocomplete="off">
+      <label class="field">Subtitle
+        <input id="caption-subtitle" type="text" maxlength="48" autocomplete="off">
       </label>
-      <fieldset class="fill-picker">
-        <legend>Title fill</legend>
-        <label><input type="radio" name="fillStyle" value="solid" checked> Solid</label>
-        <label><input type="radio" name="fillStyle" value="sunset"> Sunset Fade</label>
-        <label><input type="radio" name="fillStyle" value="neon"> Neon Glow</label>
-      </fieldset>
-      <label class="slider-row">Poster tilt
-        <input id="tiltRange" type="range" min="-8" max="8" step="1" value="0">
-        <output id="tiltValue">0°</output>
+      <div class="picker" id="fill-picker"></div>
+      <label class="slider">Poster tilt <span id="tilt-val">−3°</span>
+        <input id="tilt" type="range" min="-10" max="10" step="1" value="-3">
+      </label>
+      <label class="slider">Caption size
+        <input id="caption-size" type="range" min="0.7" max="1.3" step="0.05" value="1">
       </label>
     </section>
 
-    <section class="panel" aria-label="Selected panel">
+    <section class="card">
       <h2>5 · Selected panel</h2>
-      <p class="panel-label" id="panelLabel">Panel 1 of 4</p>
-      <label>Photo in this panel
-        <select id="panelPhoto"></select>
+      <div class="panel-list" id="panel-list"></div>
+      <label class="slider">Zoom <span id="zoom-val">1.00×</span>
+        <input id="zoom" type="range" min="1" max="2.5" step="0.05" value="1">
       </label>
-      <label class="slider-row">Zoom
-        <input id="zoomRange" type="range" min="100" max="300" step="5" value="100">
-        <output id="zoomValue">100%</output>
+      <label class="slider">Pan left–right
+        <input id="pan-x" type="range" min="-0.5" max="0.5" step="0.05" value="0">
       </label>
-      <div class="button-row">
-        <button type="button" id="resetPanel">Reset panel</button>
-        <button type="button" id="fillAllPanels">Same photo in every panel</button>
+      <label class="slider">Pan up–down
+        <input id="pan-y" type="range" min="-0.5" max="0.5" step="0.05" value="0">
+      </label>
+    </section>
+
+    <section class="card export-card">
+      <h2>6 · Export PNG</h2>
+      <div class="export-row">
+        <button type="button" class="export" data-export="square">Square<br>1080 × 1080</button>
+        <button type="button" class="export" data-export="portrait">Portrait<br>1080 × 1350</button>
+        <button type="button" class="export" data-export="landscape">Landscape<br>1920 × 1080</button>
       </div>
     </section>
   </aside>
 </main>
+
+<footer class="foot">
+  <p>Sunset Cover Studio — an original cover maker. No Rockstar Games logos, artwork or fonts; lettering uses the OFL-licensed Anton and Oswald faces, vendored under app/fonts/.</p>
+</footer>
 
 <script type="module" src="src/main.js"></script>
 </body>
