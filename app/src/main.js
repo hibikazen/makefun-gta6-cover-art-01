@@ -1,9 +1,9 @@
 // Wires the editor: the photo library, layout and grade pickers, caption
-// controls, per-panel crop (drag on the preview, or sliders), and one-click
-// PNG export at all three post sizes. A `?shot=` query sets up a fixed scene
-// for a screenshot instead (./shots.js).
+// controls (text, gradient styles, tilt), per-panel crop (drag on the
+// preview, or sliders), and one-click PNG export at all three post sizes.
+// A `?shot=` query sets up a fixed scene for a screenshot instead (./shots.js).
 
-import { drawCover, exportCoverPNG, captionColors, SIZES } from './cover.js';
+import { drawCover, exportCoverPNG, captionColors, CAPTION_STYLES, SIZES } from './cover.js';
 import { LAYOUTS, panelsFor, panelContains } from './layouts.js';
 import { GRADES } from './grades.js';
 import { runShot } from './shots.js';
@@ -22,6 +22,8 @@ const state = {
   subcaption: 'Neon Coast Nights',
   captionSize: 1,
   captionColor: '#ffffff',
+  captionStyle: 'sunset',
+  captionTilt: true,
   captionPos: 'bottom',
   captionBand: true,
   halftone: false,
@@ -393,6 +395,14 @@ function bindControls() {
   });
   document.getElementById('captionPosTop').addEventListener('click', () => setCaptionPos('top'));
   document.getElementById('captionPosBottom').addEventListener('click', () => setCaptionPos('bottom'));
+  for (const key of Object.keys(CAPTION_STYLES)) {
+    const button = document.getElementById(`captionStyle${key[0].toUpperCase()}${key.slice(1)}`);
+    if (button) button.addEventListener('click', () => setCaptionStyle(key));
+  }
+  document.getElementById('captionTilt').addEventListener('change', (e) => {
+    state.captionTilt = e.target.checked;
+    queueRender();
+  });
   document.getElementById('captionBand').addEventListener('change', (e) => {
     state.captionBand = e.target.checked;
     queueRender();
@@ -464,6 +474,16 @@ function setCaptionPos(pos) {
   queueRender();
 }
 
+/** Switches the caption fill style (solid, sunset gradient, neon glow). */
+function setCaptionStyle(style) {
+  state.captionStyle = style;
+  for (const key of Object.keys(CAPTION_STYLES)) {
+    const button = document.getElementById(`captionStyle${key[0].toUpperCase()}${key.slice(1)}`);
+    if (button) button.classList.toggle('selected', key === style);
+  }
+  queueRender();
+}
+
 /** Exports the current cover at the chosen post size as a PNG download. */
 async function exportCurrentCover() {
   const size = SIZES[state.sizeKey] ?? SIZES.square;
@@ -485,6 +505,9 @@ async function applyShot(config) {
   if (config.caption !== undefined) state.caption = config.caption;
   if (config.subcaption !== undefined) state.subcaption = config.subcaption;
   if (config.captionColor) state.captionColor = config.captionColor;
+  if (config.captionStyle) state.captionStyle = config.captionStyle;
+  if (config.captionTilt !== undefined) state.captionTilt = config.captionTilt;
+  if (config.captionSize) state.captionSize = config.captionSize;
   if (config.captionPos) state.captionPos = config.captionPos;
   if (config.halftone !== undefined) state.halftone = config.halftone;
   if (config.posterize !== undefined) state.posterize = config.posterize;
@@ -516,6 +539,9 @@ async function applyShot(config) {
   renderSizeList();
   renderPhotoList();
   setCaptionPos(state.captionPos);
+  setCaptionStyle(state.captionStyle);
+  const tilt = document.getElementById('captionTilt');
+  if (tilt) tilt.checked = state.captionTilt;
   renderPreview();
 }
 

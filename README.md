@@ -8,10 +8,10 @@ A GTA 6-style cover art maker, built for [make.fun's GTA 6 Cover Art bounty](htt
 
 ## What it does
 
-- **Five real multi-panel layouts** — Classic Grid (2×2), Hero + Strips, Diagonal Split, Triple Strip, and Poster + Insets.
+- **Eight real multi-panel layouts** — Classic Grid (2×2), Hero + Strips, Diagonal Split, Triple Strip, Poster + Insets, Comic Strip, Center Stage, and Editorial.
 - **Any photo, any panel** — upload several photos (or drag them onto the cover), assign each to a panel, and crop it by dragging on the preview or with zoom and pan sliders. Two built-in samples mean it works instantly with no upload.
-- **Caption editing** — main caption and sub-caption, size, six colours, top or bottom placement, and an optional dark band for legibility.
-- **Sunset and neon grades** — five gradient-map grades (Vice Sunset, Neon Nights, Miami Vice, Midnight, Golden Hour) plus a halftone dot screen, posterize, film grain, vignette and adjustable panel gaps.
+- **Caption editing** — main caption and sub-caption, size, six colours, three fill styles (Solid, Sunset Fade, Neon Glow), a poster tilt, top or bottom placement, and an optional dark band for legibility.
+- **Sunset and neon grades** — seven gradient-map grades (Vice Sunset, Neon Nights, Miami Vice, Midnight, Golden Hour, Neon Vice, Retro Print) plus a halftone dot screen, posterize, film grain, vignette and adjustable panel gaps.
 - **One-click export** — PNG at 1080×1080, 1080×1350 or 1920×1080.
 
 ## Try it

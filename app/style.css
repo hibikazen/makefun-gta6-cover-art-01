@@ -221,6 +221,11 @@ button.secondary { font-size: 14px; }
 .segmented button:first-child { border-radius: 8px 0 0 8px; }
 .segmented button:last-child { border-radius: 0 8px 8px 0; }
 
+/* The caption style buttons preview the fill they apply. */
+#captionStyleSunset { background: linear-gradient(90deg, #ffd23f, #ff7a3d 55%, #ff2e88); color: #1a0b2e; border-color: transparent; }
+#captionStyleNeon { background: linear-gradient(90deg, #59f7ff, #ff5da2); color: #1a0b2e; border-color: transparent; }
+#captionStyleSunset.selected, #captionStyleNeon.selected { box-shadow: 0 0 0 2px #fff; }
+
 #status { margin: 0; color: var(--accent-3); font-size: 14px; min-height: 20px; }
 
 .fineprint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }

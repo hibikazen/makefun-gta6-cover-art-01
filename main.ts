@@ -5,10 +5,11 @@
 // step and no network request. This program hands the entry in: it copies
 // app/ and screenshots/ from beside this file to /output and writes
 // /output/dossier.json, the summary the judge reads, with the vendored
-// make.fun library. The caps below are the scorer's own: they refuse an entry
-// the scorer would refuse (more than 4 screenshots or one over 256 KiB; more
-// than 993 files in app/ or 48 MiB of app files in all, or a path under app/
-// over 1000 bytes).
+// make.fun library. v2: eight panel layouts, seven sunset/neon grades and
+// gradient caption styles, with the same plumbing. The caps below are the
+// scorer's own: they refuse an entry the scorer would refuse (more than 4
+// screenshots or one over 256 KiB; more than 993 files in app/ or 48 MiB of
+// app files in all, or a path under app/ over 1000 bytes).
 //
 // Serve the app locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:

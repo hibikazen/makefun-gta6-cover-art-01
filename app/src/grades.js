@@ -60,6 +60,28 @@ export const GRADES = {
       [1.0, '#fef3c7'],
     ],
   },
+  neonvice: {
+    name: 'Neon Vice',
+    strength: 0.78,
+    stops: [
+      [0.0, '#0a0014'],
+      [0.28, '#4c1d95'],
+      [0.55, '#ff2e88'],
+      [0.8, '#00f5d4'],
+      [1.0, '#fef08a'],
+    ],
+  },
+  retro: {
+    name: 'Retro Print',
+    strength: 0.8,
+    stops: [
+      [0.0, '#14100c'],
+      [0.3, '#7c2d12'],
+      [0.6, '#ea580c'],
+      [0.85, '#fde68a'],
+      [1.0, '#fffbeb'],
+    ],
+  },
 };
 
 function hexToRgb(hex) {

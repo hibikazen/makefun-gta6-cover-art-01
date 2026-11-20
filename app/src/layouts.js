@@ -10,6 +10,9 @@ export const LAYOUTS = {
   diagonal: { name: 'Diagonal Split', panels: 3, build: layoutDiagonal },
   trio: { name: 'Triple Strip', panels: 3, build: layoutTrio },
   poster: { name: 'Poster + Insets', panels: 3, build: layoutPoster },
+  strip: { name: 'Comic Strip', panels: 3, build: layoutStrip },
+  center: { name: 'Center Stage', panels: 3, build: layoutCenter },
+  editorial: { name: 'Editorial', panels: 3, build: layoutEditorial },
 };
 
 function rect(x, y, w, h) {
@@ -74,6 +77,40 @@ export function layoutPoster(w, h, gap) {
     rect(0, 0, w, h),
     { ...rect(gap * 2, h - gap * 2 - insetH, insetW, insetH), inset: true },
     { ...rect(w - gap * 2 - insetW, h - gap * 2 - insetH, insetW, insetH), inset: true },
+  ];
+}
+
+/** Three full-width horizontal bands, like a comic strip. */
+export function layoutStrip(w, h, gap) {
+  const ph = (h - gap * 4) / 3;
+  return [
+    rect(gap, gap, w - gap * 2, ph),
+    rect(gap, gap * 2 + ph, w - gap * 2, ph),
+    rect(gap, gap * 3 + ph * 2, w - gap * 2, ph),
+  ];
+}
+
+/** One big panel in the middle, flanked by two narrow side strips. */
+export function layoutCenter(w, h, gap) {
+  const sideW = (w - gap * 4) * 0.2;
+  const centerW = w - gap * 4 - sideW * 2;
+  return [
+    rect(gap, gap, sideW, h - gap * 2),
+    rect(gap * 2 + sideW, gap, centerW, h - gap * 2),
+    rect(gap * 3 + sideW + centerW, gap, sideW, h - gap * 2),
+  ];
+}
+
+/** Asymmetric editorial: a tall panel on the left, two stacked on the right. */
+export function layoutEditorial(w, h, gap) {
+  const leftW = (w - gap * 3) * 0.55;
+  const rightW = w - gap * 3 - leftW;
+  const topH = (h - gap * 3) * 0.58;
+  const botH = h - gap * 3 - topH;
+  return [
+    rect(gap, gap, leftW, h - gap * 2),
+    rect(gap * 2 + leftW, gap, rightW, topH),
+    rect(gap * 2 + leftW, gap * 2 + topH, rightW, botH),
   ];
 }
 

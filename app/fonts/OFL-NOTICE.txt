@@ -10,5 +10,9 @@ font files themselves are kept unmodified and this notice stays with them.
 The full license text ships inside each font file's metadata and is published
 at https://openfontlicense.org/.
 
+Anton draws the big poster captions (including the Sunset Fade and Neon Glow
+gradient styles, which are canvas fills, not font effects); Oswald draws the
+sub-captions and the editor's own interface text.
+
 Neither font is a Rockstar Games font, and this app contains no Rockstar
 Games logos, artwork or wordmarks.

@@ -1,7 +1,8 @@
 // Fixed scenes for screenshots. `?shot=editor` shows the page with a sample
 // photo loaded; `?shot=cover` shows the cover alone, edge to edge. Query
 // params pick the scene: size (square|portrait|wide), layout, grade, caption,
-// sub, photo/photo2/photo3/photo4 (sample names), halftone, posterize.
+// sub, photo/photo2/photo3/photo4 (sample names), halftone, posterize, style
+// (solid|sunset|neon), tilt (0|1) and capsize (a caption size multiplier).
 // window.__shotReady is set once the cover is painted.
 
 const SAMPLES = {
@@ -45,6 +46,9 @@ export async function runShot(shot, query, apply) {
     caption: query.get('caption') ?? 'Sunset Heist',
     subcaption: query.get('sub') ?? 'Neon Coast Nights',
     captionColor: query.get('color') ?? '#ffffff',
+    captionStyle: query.get('style') ?? 'sunset',
+    captionTilt: query.get('tilt') !== '0',
+    captionSize: Number(query.get('capsize')) || 1,
     captionPos: query.get('pos') ?? 'bottom',
     halftone: query.get('halftone') === '1',
     posterize: query.get('posterize') === '1',
@@ -56,6 +60,11 @@ export async function runShot(shot, query, apply) {
     await document.fonts.ready;
   } catch {
     // The shot still goes ahead with whatever fonts loaded.
+  }
+  if (shot === 'editor') {
+    // The preview is sticky, so scrolling the page reveals the caption and
+    // grade controls below the fold while the cover stays in view.
+    window.scrollTo(0, 360);
   }
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   window.__shotReady = true;

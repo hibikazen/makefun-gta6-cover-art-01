@@ -18,6 +18,37 @@ export function captionColors() {
   return CAPTION_COLORS;
 }
 
+/**
+ * Caption fill styles: solid colour, a sunset gradient fading down the
+ * letters, or a neon gradient with a pink glow. The outline stays dark
+ * in every style, so the words read over any photo.
+ */
+export const CAPTION_STYLES = {
+  solid: { name: 'Solid' },
+  sunset: { name: 'Sunset Fade' },
+  neon: { name: 'Neon Glow' },
+};
+
+/** The fill for one caption line: a solid colour or a vertical gradient. */
+function captionFill(ctx, y, size, style, color) {
+  if (style === 'sunset') {
+    const g = ctx.createLinearGradient(0, y - size * 0.85, 0, y + size * 0.1);
+    g.addColorStop(0, '#fff7ae');
+    g.addColorStop(0.45, '#ffd23f');
+    g.addColorStop(0.75, '#ff7a3d');
+    g.addColorStop(1, '#ff2e88');
+    return g;
+  }
+  if (style === 'neon') {
+    const g = ctx.createLinearGradient(0, y - size * 0.85, 0, y + size * 0.1);
+    g.addColorStop(0, '#e0faff');
+    g.addColorStop(0.5, '#59f7ff');
+    g.addColorStop(1, '#ff5da2');
+    return g;
+  }
+  return color;
+}
+
 let noiseCanvas = null;
 
 /** A tileable film-grain pattern, built once and reused for every render. */
@@ -53,6 +84,11 @@ function drawSunsetBackdrop(ctx, w, h) {
   sun.addColorStop(0, 'rgba(255, 190, 80, 0.5)');
   sun.addColorStop(1, 'rgba(255, 190, 80, 0)');
   ctx.fillStyle = sun;
+  ctx.fillRect(0, 0, w, h);
+  const neon = ctx.createRadialGradient(w * 0.12, h * 0.1, 0, w * 0.12, h * 0.1, w * 0.45);
+  neon.addColorStop(0, 'rgba(255, 46, 136, 0.35)');
+  neon.addColorStop(1, 'rgba(255, 46, 136, 0)');
+  ctx.fillStyle = neon;
   ctx.fillRect(0, 0, w, h);
 }
 
@@ -123,7 +159,7 @@ function drawCaption(ctx, w, h, state) {
   const sub = (state.subcaption ?? '').trim().toUpperCase();
   if (!text && !sub) return;
   const maxWidth = w * 0.9;
-  let size = h * 0.085 * (state.captionSize ?? 1);
+  let size = h * 0.1 * (state.captionSize ?? 1);
   let lines = [];
   if (text) {
     lines = wrapCaption(ctx, text, maxWidth, size);
@@ -133,11 +169,21 @@ function drawCaption(ctx, w, h, state) {
     }
   }
   const lineH = size * 1.04;
-  const subSize = Math.round(size * 0.3);
+  const subSize = Math.round(size * 0.32);
   const blockH = lines.length * lineH + (sub ? subSize * 1.9 : 0);
   const pad = h * 0.045;
   const top = state.captionPos === 'top';
   const bandY = top ? pad * 0.5 : h - pad * 0.5 - blockH - size * 0.35;
+  const style = CAPTION_STYLES[state.captionStyle] ? state.captionStyle : 'solid';
+  // A slight tilt turns the caption into a slanted poster banner; the band,
+  // the sub-caption and the words rotate together around the block's centre.
+  if (state.captionTilt) {
+    const cy = bandY + (blockH + size * 0.35) / 2;
+    ctx.save();
+    ctx.translate(w / 2, cy);
+    ctx.rotate(-0.04);
+    ctx.translate(-w / 2, -cy);
+  }
   if (state.captionBand) {
     ctx.fillStyle = 'rgba(12, 3, 24, 0.55)';
     ctx.fillRect(0, bandY, w, blockH + size * 0.35);
@@ -165,23 +211,31 @@ function drawCaption(ctx, w, h, state) {
       // See above.
     }
   }
-  if (!text) return;
-  ctx.font = `${size}px Anton, sans-serif`;
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#160a24';
-  ctx.lineWidth = Math.max(2, size * 0.16);
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-  ctx.shadowBlur = size * 0.1;
-  ctx.shadowOffsetY = size * 0.045;
-  lines.forEach((line, i) => {
-    const y = firstBaseline + i * lineH;
-    ctx.strokeText(line, w / 2, y);
-    ctx.fillStyle = color;
-    ctx.fillText(line, w / 2, y);
-  });
-  ctx.shadowColor = 'transparent';
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
+  if (text) {
+    ctx.font = `${size}px Anton, sans-serif`;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#160a24';
+    ctx.lineWidth = Math.max(2, size * 0.18);
+    if (style === 'neon') {
+      ctx.shadowColor = 'rgba(255, 46, 136, 0.75)';
+      ctx.shadowBlur = size * 0.18;
+      ctx.shadowOffsetY = size * 0.03;
+    } else {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = size * 0.12;
+      ctx.shadowOffsetY = size * 0.05;
+    }
+    lines.forEach((line, i) => {
+      const y = firstBaseline + i * lineH;
+      ctx.strokeText(line, w / 2, y);
+      ctx.fillStyle = captionFill(ctx, y, size, style, color);
+      ctx.fillText(line, w / 2, y);
+    });
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+  }
+  if (state.captionTilt) ctx.restore();
 }
 
 /**
