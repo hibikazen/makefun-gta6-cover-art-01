@@ -1,131 +1,93 @@
-// Panel layouts for Sunset Cover Studio.
-//
-// Every layout is a set of panels expressed as fractions of the cover
-// (x, y, width, height, each 0..1) plus the zone where the caption sits.
-// The renderer turns fractions into pixels, so one layout works at every
-// export size: square, portrait and landscape alike.
-
-export const LAYOUTS = {
-  grid: {
+// The eight multi-panel layouts. Every panel is a rectangle in fractions of
+// the cover (x, y from the top-left corner, w and h from 0 to 1). `caption`
+// is the zone the title and subtitle sit in, also in fractions, with the
+// text alignment inside it.
+export const LAYOUTS = [
+  {
+    id: 'grid',
     name: 'Classic Grid',
-    blurb: 'Four equal panels, the poster-grid look.',
     panels: [
       { x: 0, y: 0, w: 0.5, h: 0.5 },
       { x: 0.5, y: 0, w: 0.5, h: 0.5 },
       { x: 0, y: 0.5, w: 0.5, h: 0.5 },
       { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
     ],
-    caption: { x: 0.5, y: 0.82, width: 0.92, align: 'center' },
+    caption: { x: 0.04, y: 0.79, w: 0.92, align: 'center' },
   },
-  heroLeft: {
+  {
+    id: 'hero-left',
     name: 'Hero Left',
-    blurb: 'One big hero panel, two stacked beside it.',
     panels: [
       { x: 0, y: 0, w: 0.62, h: 1 },
       { x: 0.62, y: 0, w: 0.38, h: 0.5 },
       { x: 0.62, y: 0.5, w: 0.38, h: 0.5 },
     ],
-    caption: { x: 0.31, y: 0.83, width: 0.56, align: 'center' },
+    caption: { x: 0.03, y: 0.78, w: 0.56, align: 'left' },
   },
-  heroRight: {
+  {
+    id: 'hero-right',
     name: 'Hero Right',
-    blurb: 'Hero panel on the right, stack on the left.',
     panels: [
       { x: 0, y: 0, w: 0.38, h: 0.5 },
       { x: 0, y: 0.5, w: 0.38, h: 0.5 },
       { x: 0.38, y: 0, w: 0.62, h: 1 },
     ],
-    caption: { x: 0.69, y: 0.83, width: 0.56, align: 'center' },
+    caption: { x: 0.41, y: 0.78, w: 0.56, align: 'left' },
   },
-  triptych: {
+  {
+    id: 'triptych',
     name: 'Triptych',
-    blurb: 'Three tall columns side by side.',
     panels: [
-      { x: 0, y: 0, w: 0.3333, h: 1 },
-      { x: 0.3333, y: 0, w: 0.3334, h: 1 },
-      { x: 0.6667, y: 0, w: 0.3333, h: 1 },
+      { x: 0, y: 0, w: 1 / 3, h: 1 },
+      { x: 1 / 3, y: 0, w: 1 / 3, h: 1 },
+      { x: 2 / 3, y: 0, w: 1 / 3, h: 1 },
     ],
-    caption: { x: 0.5, y: 0.83, width: 0.9, align: 'center' },
+    caption: { x: 0.04, y: 0.79, w: 0.92, align: 'center' },
   },
-  comic: {
+  {
+    id: 'comic',
     name: 'Comic Strip',
-    blurb: 'A horizontal band of four frames.',
     panels: [
-      { x: 0, y: 0.12, w: 0.25, h: 0.76 },
-      { x: 0.25, y: 0.12, w: 0.25, h: 0.76 },
-      { x: 0.5, y: 0.12, w: 0.25, h: 0.76 },
-      { x: 0.75, y: 0.12, w: 0.25, h: 0.76 },
+      { x: 0, y: 0, w: 1, h: 0.55 },
+      { x: 0, y: 0.55, w: 1 / 3, h: 0.45 },
+      { x: 1 / 3, y: 0.55, w: 1 / 3, h: 0.45 },
+      { x: 2 / 3, y: 0.55, w: 1 / 3, h: 0.45 },
     ],
-    caption: { x: 0.5, y: 0.9, width: 0.92, align: 'center' },
+    caption: { x: 0.04, y: 0.36, w: 0.92, align: 'center' },
   },
-  centerStage: {
+  {
+    id: 'center',
     name: 'Center Stage',
-    blurb: 'A large centre panel flanked by two strips.',
     panels: [
-      { x: 0, y: 0, w: 0.2, h: 1 },
-      { x: 0.2, y: 0.06, w: 0.6, h: 0.88 },
-      { x: 0.8, y: 0, w: 0.2, h: 1 },
+      { x: 0, y: 0, w: 0.16, h: 1 },
+      { x: 0.16, y: 0.1, w: 0.68, h: 0.68 },
+      { x: 0.84, y: 0, w: 0.16, h: 1 },
+      { x: 0.16, y: 0.78, w: 0.68, h: 0.22 },
     ],
-    caption: { x: 0.5, y: 0.85, width: 0.56, align: 'center' },
+    caption: { x: 0.2, y: 0.58, w: 0.6, align: 'center' },
   },
-  editorial: {
+  {
+    id: 'editorial',
     name: 'Editorial',
-    blurb: 'Magazine cover: one wide hero, two below.',
     panels: [
       { x: 0, y: 0, w: 1, h: 0.62 },
-      { x: 0, y: 0.62, w: 0.5, h: 0.38 },
-      { x: 0.5, y: 0.62, w: 0.5, h: 0.38 },
+      { x: 0, y: 0.62, w: 1 / 3, h: 0.38 },
+      { x: 1 / 3, y: 0.62, w: 1 / 3, h: 0.38 },
+      { x: 2 / 3, y: 0.62, w: 1 / 3, h: 0.38 },
     ],
-    caption: { x: 0.5, y: 0.12, width: 0.9, align: 'center' },
+    caption: { x: 0.04, y: 0.43, w: 0.92, align: 'center' },
   },
-  duo: {
+  {
+    id: 'duo',
     name: 'Split Duo',
-    blurb: 'Two halves, one face-off.',
     panels: [
       { x: 0, y: 0, w: 0.5, h: 1 },
       { x: 0.5, y: 0, w: 0.5, h: 1 },
     ],
-    caption: { x: 0.5, y: 0.83, width: 0.9, align: 'center' },
+    caption: { x: 0.04, y: 0.79, w: 0.92, align: 'center' },
   },
-};
-
-export const LAYOUT_ORDER = [
-  'grid',
-  'heroLeft',
-  'heroRight',
-  'triptych',
-  'comic',
-  'centerStage',
-  'editorial',
-  'duo',
 ];
 
-// Pixel rectangle for one panel, pulled in by half the gutter on each side
-// so neighbouring panels share one clean gap.
-export function panelRect(layoutId, index, width, height, gutter) {
-  const panel = LAYOUTS[layoutId].panels[index];
-  const half = gutter / 2;
-  return {
-    x: Math.round(panel.x * width + half),
-    y: Math.round(panel.y * height + half),
-    w: Math.round(panel.w * width - gutter),
-    h: Math.round(panel.h * height - gutter),
-  };
-}
-
-// Which panel, if any, contains the point (px, py) in cover pixels.
-export function panelAt(layoutId, px, py, width, height) {
-  const panels = LAYOUTS[layoutId].panels;
-  for (let i = panels.length - 1; i >= 0; i -= 1) {
-    const p = panels[i];
-    if (
-      px >= p.x * width &&
-      px < (p.x + p.w) * width &&
-      py >= p.y * height &&
-      py < (p.y + p.h) * height
-    ) {
-      return i;
-    }
-  }
-  return -1;
+export function layoutById(id) {
+  return LAYOUTS.find((l) => l.id === id) ?? LAYOUTS[0];
 }

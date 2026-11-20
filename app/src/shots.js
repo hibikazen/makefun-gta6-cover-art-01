@@ -1,62 +1,36 @@
-// Screenshot scenes for Sunset Cover Studio.
-//
-// Opening the app with ?shot=<name> applies a fixed preset (layout, grade,
-// caption, size) and loads the built-in samples, so the screenshots are
-// reproducible: the same scene always renders the same cover. The cover
-// scenes also hide the editor chrome, so the shot is the cover alone.
+// Screenshot presets: the ?shot= URL parameters the maker uses to stage the
+// screenshots (see shots.json). `shot=cover` shows the exported cover alone,
+// full-viewport; `shot=editor` shows the editor with a photo loaded. The
+// other parameters pick the photo, caption, layout, grade and caption fill.
+import { gradeById } from './grades.js';
+import { layoutById } from './layouts.js';
 
-export const SHOTS = {
-  cover: {
-    layout: 'heroLeft',
-    grade: 'sunset',
-    title: 'LEONIDA NIGHTS',
-    subtitle: 'A Vice City Story',
-    fill: 'sunset',
-    tilt: -3,
-    captionSize: 1,
-    size: 'landscape',
-    chrome: false,
-  },
-  editor: {
-    layout: 'grid',
-    grade: 'vice',
-    title: 'NEON SHORE',
-    subtitle: 'Downtown After Dark',
-    fill: 'neon',
-    tilt: -4,
-    captionSize: 1,
-    size: 'landscape',
-    chrome: true,
-  },
-  square: {
-    layout: 'centerStage',
-    grade: 'golden',
-    title: 'PIER PRESSURE',
-    subtitle: 'Golden Hour Run',
-    fill: 'solid',
-    tilt: 2,
-    captionSize: 1,
-    size: 'square',
-    chrome: false,
-  },
-  portrait: {
-    layout: 'editorial',
-    grade: 'retro',
-    title: 'NIGHT SHIFT',
-    subtitle: 'Ocean Drive, 2 AM',
-    fill: 'sunset',
-    tilt: -2,
-    captionSize: 1,
-    size: 'portrait',
-    chrome: false,
-  },
-};
+export function readShotParams() {
+  const q = new URLSearchParams(window.location.search);
+  return {
+    shot: q.get('shot'),
+    photo: q.get('photo'),
+    caption: q.get('caption'),
+    subtitle: q.get('subtitle'),
+    layout: q.get('layout'),
+    grade: q.get('grade'),
+    fill: q.get('fill'),
+  };
+}
 
-// The sample photos every scene loads, in order.
-export const SHOT_SAMPLES = ['boulevard', 'pier'];
-
-export function shotFromUrl() {
-  const name = new URLSearchParams(window.location.search).get('shot');
-  if (name && Object.hasOwn(SHOTS, name)) return { name, preset: SHOTS[name] };
-  return null;
+export function applyShotPreset(state, params) {
+  if (params.layout && layoutById(params.layout).id === params.layout) {
+    state.layoutId = params.layout;
+  }
+  if (params.grade && gradeById(params.grade).id === params.grade) {
+    state.gradeId = params.grade;
+  }
+  if (params.fill === 'solid' || params.fill === 'sunset' || params.fill === 'neon') {
+    state.fill = params.fill;
+  }
+  if (params.caption) state.title = params.caption;
+  if (params.subtitle) state.subtitle = params.subtitle;
+  const coverMode = params.shot === 'cover';
+  if (coverMode) document.body.classList.add('shot-cover');
+  return coverMode;
 }

@@ -1,18 +1,16 @@
-Fonts in this folder — SIL Open Font License, version 1.1
+Fonts in this folder
+=====================
 
-Anton-Regular.ttf
-  Anton, Copyright 2020 The Anton Project Authors
-  (https://github.com/googlefonts/AntonFont).
-  Designed by Vernon Adams. Licensed under the SIL Open Font License, 1.1.
+Anton-Regular.ttf — "Anton", designed by Vernon Adams.
+Oswald.ttf — "Oswald", a variable font designed by Vernon Adams,
+Kalapi Gajjar-Bordawekar and Cyreal.
 
-Oswald.ttf
-  Oswald (variable weight), Copyright 2016 The Oswald Project Authors
-  (https://github.com/googlefonts/OswaldFont).
-  Designed by Vernon Adams. Licensed under the SIL Open Font License, 1.1.
+Both fonts are licensed under the SIL Open Font License, Version 1.1
+(http://scripts.sil.org/OFL), which allows them to be used, modified and
+redistributed freely, including in this app. The full license text ships with
+the fonts' source repository.
 
-Source: the google/fonts repository (https://github.com/google/fonts),
-ofl/anton/Anton-Regular.ttf and ofl/oswald/Oswald[wght].ttf, downloaded
-unmodified. Both faces are free to use, study, copy, merge, embed,
-modify, redistribute and sell, under the terms of the SIL Open Font
-License 1.1 (https://openfontlicense.org). No Rockstar Games font is
-used anywhere in this app.
+Source: the Google Fonts project (github.com/google/fonts), ofl/anton and
+ofl/oswald. The files here are subsets of the upstream fonts, keeping the
+Latin glyphs (Basic Latin + Latin-1 Supplement) the app's captions need;
+subsetting does not change the license. No Rockstar Games font is used.
