@@ -1,18 +1,33 @@
-[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/hibikazen/makefun-gta6-cover-art-01/rank.svg)](https://make.fun/bounty/gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/hibikazen/makefun-gta6-cover-art-01/reward.svg)](https://make.fun/bounty/gta6-cover-art-01)
-
 # Sunset Cover Studio
 
-A GTA 6-style cover art maker, built for [make.fun's GTA 6 Cover Art bounty](https://make.fun/bounty/gta6-cover-art-01). Turn your own photo and a caption into multi-panel cover art with a Vice City sunset or neon colour grade, and export it as a PNG to share.
+[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/c/gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/hibikazen/makefun-gta6-cover-art-01/rank.svg)](https://make.fun/c/gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/hibikazen/makefun-gta6-cover-art-01/reward.svg)](https://make.fun/c/gta6-cover-art-01)
+
+An offline web app that turns your photos and a caption into GTA 6-style
+multi-panel cover art, exported as a PNG to share. Built for the
+[Make GTA 6 Cover Art](https://make.fun/c/gta6-cover-art-01) competition on
+make.fun.
+
+**Live demo:** https://hibikazen.github.io/makefun-gta6-cover-art-01/app/
 
 ## What it does
 
-- **Eight real multi-panel layouts** — Classic Grid (2×2), Hero + Strips, Diagonal Split, Triple Strip, Poster + Insets, Comic Strip, Center Stage, and Editorial.
-- **Any photo, any panel** — upload several photos (or drag them onto the cover), assign each to a panel, and crop it by dragging on the preview or with zoom and pan sliders. Two built-in samples mean it works instantly with no upload.
-- **Caption editing** — main caption and sub-caption, size, six colours, three fill styles (Solid, Sunset Fade, Neon Glow), a poster tilt, top or bottom placement, and an optional dark band for legibility.
-- **Sunset and neon grades** — seven gradient-map grades (Vice Sunset, Neon Nights, Miami Vice, Midnight, Golden Hour, Neon Vice, Retro Print) plus a halftone dot screen, posterize, film grain, vignette and adjustable panel gaps.
-- **One-click export** — PNG at 1080×1080, 1080×1350 or 1920×1080.
+- **Any photo:** drop in your own photos (or use the two built-in samples),
+  fill several panels with one photo or several, and crop, pan and zoom each
+  panel — drag on the canvas, scroll to zoom, or use the sliders.
+- **8 multi-panel layouts:** Classic Grid, Hero Left, Hero Right, Triptych,
+  Comic Strip, Center Stage, Editorial and Split Duo.
+- **7 colour grades:** Vice Sunset, Neon Vice, Retro Print, Halftone Pop,
+  Teal Noir, Golden Hour and Mono Pop — each with its own tint wash, grain
+  and vignette.
+- **Bold caption lettering:** a big Anton display title plus an Oswald
+  subtitle, with three fill styles (Solid, Sunset Fade, Neon Glow) and a
+  poster tilt control.
+- **One-click export:** PNG in the common post sizes — 1080 × 1080 (square),
+  1080 × 1350 (portrait) and 1920 × 1080 (landscape).
+- **Fully offline:** static files only, no build step, no network requests.
+  Your photos never leave your machine.
 
 ## Try it
 
@@ -20,13 +35,24 @@ A GTA 6-style cover art maker, built for [make.fun's GTA 6 Cover Art bounty](htt
 node serve.ts
 ```
 
-Then open http://localhost:8080 in desktop Chrome. The app is plain static files under `app/` — no build step, no network request, and photos never leave your machine.
+Then open http://localhost:8080 — or serve `app/` with any static file
+server and open `app/index.html`.
 
-Or skip the install and try it live: https://hibikazen.github.io/makefun-gta6-cover-art-01/app/
+## Layout
 
-## Originality
+- `app/` — the web app (index.html, style.css, src/*.js, fonts, samples)
+- `screenshots/` — screenshots of the app and covers it exported
+- `shots.json` — the four screenshot scenes (`?shot=` URLs)
+- `main.ts` — the entry program: copies `app/` + `screenshots/` to the
+  output directory and writes `dossier.json`
+- `serve.ts` — a tiny static server for local previews
 
-Everything here is original: no Rockstar Games logo, wordmark, official artwork or font. The lettering uses Anton and Oswald, both licensed under the SIL Open Font License and vendored under `app/fonts/` (see `app/fonts/OFL-NOTICE.txt`). The two sample photos under `app/samples/` were made with an image model for make.fun and are free to use.
+## Fonts and photos
+
+The display fonts (Anton and Oswald) are licensed under the SIL Open Font
+License 1.1 — see `app/fonts/OFL-NOTICE.txt`. The two sample photos were
+made with an image model for make.fun and are free to use. No Rockstar Games
+logo, artwork or font is used anywhere.
 
 ## License
 
